@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#c7efff">
+  <title>Catch the Fruit! — Bunny's garden adventure</title>
+  <style>
+    :root{font-family:ui-rounded,"Trebuchet MS",system-ui,sans-serif;color:#284352;background:#dff6ed;font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;--pink:#f2768b;--pink-dark:#dc5c75;--blue:#dff5ff;--ink:#284352}
+    *{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;padding:clamp(8px,2.5vw,30px);background:radial-gradient(ellipse at 8% 12%,#fff5c7 0 5%,transparent 5.5%),radial-gradient(ellipse at 91% 86%,#c4edc9 0 8%,transparent 8.5%),linear-gradient(135deg,#d7f1ff,#e8f8df 52%,#fff0d4)}
+    button{font:inherit;cursor:pointer;border:0;color:inherit;font-weight:800;transition:transform .15s,filter .15s,box-shadow .15s}button:hover{transform:translateY(-2px);filter:brightness(1.025)}button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #386e91;outline-offset:3px}
+    .app{width:min(980px,100%);padding:clamp(12px,2.8vw,25px);background:#fffdf7;border:4px solid #fff;border-radius:32px;box-shadow:0 20px 60px #457c7830,0 4px 13px #31564a12}
+    .head{position:relative;z-index:21;display:flex;justify-content:space-between;align-items:center;gap:14px;margin:0 4px 16px}.logo{font-size:clamp(1.2rem,3.2vw,1.85rem);font-weight:1000;letter-spacing:-.055em;white-space:nowrap}.logo em{font-style:normal;color:var(--pink-dark)}.actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.chip{border-radius:99px;background:#edf7fb;padding:9px 13px;box-shadow:0 3px 0 #d6e9ee;font-size:.88rem;white-space:nowrap}.chip.music{background:#f2edff;box-shadow:0 3px 0 #dfd5f3}.chip.music[aria-pressed=true]{background:#e5f5e5;box-shadow:0 3px 0 #cee7cf}.chip.menu{background:#fff1e7;box-shadow:0 3px 0 #f2decd}.chip[hidden]{display:none}
+    .hud{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px 12px;margin:0 6px 12px}.level{font-size:clamp(1rem,2.6vw,1.2rem);font-weight:900}.score{font-size:.93rem;font-weight:800;color:#607784}.track{grid-column:1/-1;height:13px;border-radius:99px;background:#eaf0e7;overflow:hidden}.meter{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#ffc95e,#ff8c7e,#d38ce5);transition:width .25s}
+    .playfield{position:relative;width:100%;aspect-ratio:16/9;min-height:310px;max-height:590px;overflow:hidden;border-radius:23px;isolation:isolate;background:#c7efff;box-shadow:inset 0 0 0 3px #ffffffaa;touch-action:none}.playfield canvas{display:block;width:100%;height:100%;touch-action:none}.shade{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;padding:clamp(12px,4vw,32px);background:#18374636;backdrop-filter:blur(4px)}.shade.center-page{position:fixed;z-index:20}.shade[hidden]{display:none}.dialog{width:min(500px,100%);margin:auto;text-align:center;padding:clamp(19px,4vw,34px);border:4px solid white;border-radius:30px;background:#fffdf4f5;box-shadow:0 15px 40px #1c3c472b;animation:arrive .28s cubic-bezier(.2,.8,.3,1)}.characters{font-size:clamp(2.3rem,7vw,3.4rem);line-height:1.2}.dialog h1{font-size:clamp(1.9rem,6vw,3.15rem);line-height:1.04;letter-spacing:-.065em;color:#e95f7b;margin:7px 0 10px}.dialog p{max-width:370px;margin:0 auto 20px;color:#5e7480;font-weight:650;line-height:1.48}.buttons{display:flex;justify-content:center;flex-wrap:wrap;gap:10px}.primary,.secondary{border-radius:99px;padding:12px 22px}.primary{background:var(--pink);color:white;box-shadow:0 5px 0 var(--pink-dark);font-size:1.04rem}.secondary{background:#eef7fa;box-shadow:0 4px 0 #d7e9ed}.hint{text-align:center;padding:12px 4px 0;color:#6f858e;font-size:.84rem}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@keyframes arrive{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @media(max-width:620px){body{padding:9px}.app{border-radius:25px;padding:12px}.head{align-items:flex-start;margin:0 2px 13px}.logo{padding-top:6px}.actions{gap:6px}.chip{font-size:.79rem;padding:8px 10px}.playfield{aspect-ratio:4/3;min-height:300px;border-radius:18px}.hint{font-size:.76rem}}@media(max-width:390px){.logo{font-size:1.08rem}.chip{padding:7px 8px}.playfield{min-height:280px}}
+  </style>
+</head>
+<body>
+  <main class="app" aria-label="Catch the Fruit game">
+    <header class="head">
+      <div class="logo">🐰 Catch the <em>Fruit!</em></div>
+      <nav class="actions" aria-label="Game controls">
+        <button class="chip music" id="music" type="button" aria-pressed="false">♫ Music: Off</button>
+        <button class="chip" id="pause" type="button" hidden>Ⅱ Pause</button>
+        <button class="chip" id="restart" type="button" hidden>↻ Restart</button>
+        <button class="chip menu" id="mainMenu" type="button" hidden>⌂ Main Menu</button>
+      </nav>
+    </header>
+    <section class="hud" aria-label="Game progress">
+      <div class="level" id="levelLabel">Ready for a fruit adventure?</div><div class="score" id="scoreLabel">0 fruit caught</div>
+      <div class="track" role="progressbar" aria-label="Level progress" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"><div class="meter" id="meter"></div></div>
+    </section>
+    <section class="playfield" id="field" aria-label="Game play area">
+      <canvas id="scene" aria-label="Catch the falling strawberry, banana, and apple with the basket"></canvas>
+      <div class="shade" id="shade"><div class="dialog" id="dialog"></div></div>
+    </section>
+    <p class="hint">Guide the basket with your mouse or finger · Catch every fruit to keep your adventure going!</p>
+  </main>
+  <script>
+  (()=>{
+    'use strict';
+    const canvas=document.querySelector('#scene'),ctx=canvas.getContext('2d'),field=document.querySelector('#field');
+    const shade=document.querySelector('#shade'),dialog=document.querySelector('#dialog');
+    const levelLabel=document.querySelector('#levelLabel'),scoreLabel=document.querySelector('#scoreLabel'),meter=document.querySelector('#meter'),track=document.querySelector('.track');
+    const pauseButton=document.querySelector('#pause'),restartButton=document.querySelector('#restart'),menuButton=document.querySelector('#mainMenu'),musicButton=document.querySelector('#music');
+    const worlds=[
+      {name:'Sunny Meadow',sky:['#92dcff','#e7fbff'],hill:'#a5dd8c',land:'#72c783',flowers:['🌼','🌸','🌱'],bird:'☀️'},
+      {name:'Berry Patch',sky:['#c4b6ff','#fff0fa'],hill:'#b59fe8',land:'#81ceaa',flowers:['🌷','🍓','🌿'],bird:'🦋'},
+      {name:'Apple Orchard',sky:['#a9e4ff','#f2ffd7'],hill:'#a7d278',land:'#6fbd78',flowers:['🍃','🌼','🍎'],bird:'🕊️'},
+      {name:'Seaside Breeze',sky:['#70d6ef','#dcfbff'],hill:'#84d2be',land:'#61c79f',flowers:['🐚','🌺','🫧'],bird:'⛵'},
+      {name:'Rainbow Garden',sky:['#ffc4d7','#fff0d5'],hill:'#c3a4e7',land:'#7ed395',flowers:['🌈','🌷','✨'],bird:'🦋'},
+      {name:'Twilight Woods',sky:['#8095d2','#e4d7f6'],hill:'#758fbd',land:'#68b489',flowers:['🍄','✨','🌙'],bird:'🦉'},
+      {name:'Sunflower Field',sky:['#80dfe4','#e9fff1'],hill:'#acd77d',land:'#72c979',flowers:['🌻','🌼','🌱'],bird:'🐝'},
+      {name:'Candy Clouds',sky:['#dfb9f4','#fff0f6'],hill:'#bba1e6',land:'#7ed4b2',flowers:['☁️','🍬','💜'],bird:'🌈'},
+      {name:'Autumn Park',sky:['#ffbd88','#ffefbf'],hill:'#d3a16b',land:'#8abd76',flowers:['🍂','🍁','🌰'],bird:'🧡'},
+      {name:'Starry Celebration',sky:['#6d83d2','#c5b8ed'],hill:'#8695d0',land:'#61b896',flowers:['⭐','✨','🎉'],bird:'🌟'}
+    ];
+    const fruitTypes=['🍓','🍌','🍎'];
+    let width=800,height=450,pixelRatio=1,level=1,caught=0,objects=[],sparkles=[],status='menu',basketX=400,basketAim=400,basketBounce=0;
+    let lastTime=0,spawnWait=0,worldTime=0,musicOn=false,audio=null,musicLoop=null,noteIndex=0;
+    const tune=[523.25,659.25,783.99,659.25,587.33,698.46,880,698.46,523.25,587.33,659.25,523.25,440,523.25,659.25,587.33];
+    function tuneStart(){
+      if(!musicOn||status!=='playing')return;
+      try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();clearInterval(musicLoop);musicLoop=setInterval(()=>{
+        if(status!=='playing'||!musicOn)return;const now=audio.currentTime,osc=audio.createOscillator(),gain=audio.createGain();
+        osc.type='sine';osc.frequency.value=tune[noteIndex++%tune.length];gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.03,now+.04);gain.gain.exponentialRampToValueAtTime(.0001,now+.34);osc.connect(gain).connect(audio.destination);osc.start(now);osc.stop(now+.36);
+        if(noteIndex%4===0){const bass=audio.createOscillator(),volume=audio.createGain();bass.type='sine';bass.frequency.value=tune[(noteIndex+4)%tune.length]/2;volume.gain.setValueAtTime(.0001,now);volume.gain.exponentialRampToValueAtTime(.012,now+.04);volume.gain.exponentialRampToValueAtTime(.0001,now+.5);bass.connect(volume).connect(audio.destination);bass.start(now);bass.stop(now+.51)}
+      },390)}catch(_){/* Audio is optional and starts only after the player's gesture. */}
+    }
+    function tuneStop(){clearInterval(musicLoop);musicLoop=null;if(audio?.state==='running')audio.suspend()}
+    function syncHud(){
+      const active=['playing','paused','levelDone','gameOver'].includes(status);
+      pauseButton.hidden=!(status==='playing'||status==='paused');restartButton.hidden=!active;menuButton.hidden=!active;
+      pauseButton.textContent=status==='paused'?'▶ Resume':'Ⅱ Pause';
+      levelLabel.textContent=status==='menu'?'Ready for a fruit adventure?':`Level ${level} — ${caught} / ${level*10}`;
+      scoreLabel.textContent=`${caught} fruit caught`;meter.style.width=`${Math.min(100,caught/(level*10)*100)}%`;track.setAttribute('aria-valuenow',String(caught));
+      musicButton.setAttribute('aria-pressed',String(musicOn));musicButton.textContent=musicOn?'♫ Music: On':'♫ Music: Off';
+    }
+    function showScreen(title,message,options,emoji,centerPage=false){
+      shade.classList.toggle('center-page',centerPage);
+      dialog.replaceChildren();const art=document.createElement('div');art.className='characters';art.textContent=emoji;art.setAttribute('aria-hidden','true');
+      const heading=document.createElement('h1');heading.textContent=title;const copy=document.createElement('p');copy.textContent=message;const row=document.createElement('div');row.className='buttons';
+      for(const option of options){const button=document.createElement('button');button.className=option.primary?'primary':'secondary';button.textContent=option.label;button.addEventListener('click',option.run,{once:true});row.append(button)}
+      dialog.append(art,heading,copy,row);shade.hidden=false;
+    }
+    function dismissScreen(){shade.hidden=true;shade.classList.remove('center-page')}
+    function returnToMenu(){status='menu';tuneStop();level=1;caught=0;objects=[];sparkles=[];basketX=basketAim=width/2;syncHud();showScreen('Catch the Fruit!','Help Bunny catch 10 fruits in every level. Move the basket with your mouse or finger. Ready, hop to it?',[{label:'Play!',primary:true,run:beginGame}],'🍓 🍌 🍎',true);}
+    function beginGame(){level=1;caught=0;beginLevel()}
+    function beginLevel(){status='playing';caught=0;objects=[];sparkles=[];spawnWait=0;worldTime=0;basketX=basketAim=width/2;lastTime=performance.now();dismissScreen();tuneStop();syncHud();tuneStart()}
+    function pauseGame(){if(status==='playing'){status='paused';tuneStop();showScreen('Take a little break?','Bunny will keep your place while you rest.',[{label:'▶ Resume',primary:true,run:resumeGame},{label:'⌂ Main Menu',run:returnToMenu}],'🐰');syncHud()}else if(status==='paused')resumeGame()}
+    function resumeGame(){status='playing';dismissScreen();lastTime=performance.now();syncHud();tuneStart()}
+    function restartGame(){level=1;caught=0;beginLevel()}
+    function finishLevel(){tuneStop();status='levelDone';syncHud();if(level===10){status='win';syncHud();showScreen('You Win! 🌟','Bunny is hopping with happiness! What a wonderfully fruity adventure.',[{label:'Play Again',primary:true,run:restartGame},{label:'Main Menu',run:returnToMenu}],'🎉 🐰 🌟')}else{showScreen(`Level ${level} complete!`,'Hooray! You caught them all. A new colorful place is waiting.',[{label:'Next Level',primary:true,run:()=>{level++;caught=0;beginLevel()}},{label:'Main Menu',run:returnToMenu}],'🏆 🐰')}}
+    function loseGame(){status='gameOver';tuneStop();syncHud();showScreen('Oh no! Fruit escaped!','One fruit slipped past the basket. Let’s try the adventure again!',[{label:'Try Again',primary:true,run:restartGame},{label:'Main Menu',run:returnToMenu}],'🍎 💨 🐰')}
+    function resize(){const box=field.getBoundingClientRect();width=box.width;height=box.height;pixelRatio=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(width*pixelRatio);canvas.height=Math.round(height*pixelRatio);ctx.setTransform(pixelRatio,0,0,pixelRatio,0,0);basketX=Math.min(width-44,Math.max(44,basketX));basketAim=Math.min(width-44,Math.max(44,basketAim))}
+    function randomBetween(min,max){return min+Math.random()*(max-min)}
+    function drawCloud(x,y,scale){ctx.fillStyle='#ffffffad';ctx.beginPath();ctx.ellipse(x,y,32*scale,13*scale,0,0,Math.PI*2);ctx.ellipse(x-17*scale,y+2*scale,16*scale,11*scale,0,0,Math.PI*2);ctx.ellipse(x+13*scale,y-8*scale,18*scale,16*scale,0,0,Math.PI*2);ctx.fill()}
+    function drawLandscape(time){
+      const world=worlds[level-1],sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,world.sky[0]);sky.addColorStop(1,world.sky[1]);ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
+      for(let i=0;i<4;i++){const x=width*(.12+i*.27);drawCloud(x,height*(.15+(i%3)*.11),.82+(i%2)*.16)}
+      // Distant rolling hills.
+      ctx.fillStyle=world.hill;ctx.beginPath();ctx.moveTo(0,height*.72);ctx.quadraticCurveTo(width*.2,height*.52,width*.45,height*.72);ctx.quadraticCurveTo(width*.74,height*.91,width,height*.63);ctx.lineTo(width,height);ctx.lineTo(0,height);ctx.fill();
+      ctx.fillStyle=world.land;ctx.beginPath();ctx.moveTo(0,height*.83);ctx.quadraticCurveTo(width*.25,height*.73,width*.52,height*.85);ctx.quadraticCurveTo(width*.79,height*.97,width,height*.78);ctx.lineTo(width,height);ctx.lineTo(0,height);ctx.fill();
+      ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`${Math.max(18,Math.min(26,width*.034))}px system-ui`;for(let i=0;i<9;i++){ctx.fillText(world.flowers[i%world.flowers.length],(i*width/8+15)%width,height*(.79+(i%3)*.065))}
+      if(level===10){for(let i=0;i<24;i++){ctx.globalAlpha=.4+.45*Math.sin(time*.003+i*1.7);ctx.fillStyle='#fff4a5';ctx.beginPath();ctx.arc((i*83+21)%width,(i*47+13)%(height*.49),1.5+i%3,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1}
+      ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#325564';ctx.font='700 13px system-ui';ctx.fillText(`${world.bird}  ${world.name}`,width<410?11:17,23);
+    }
+    function drawBasket(){
+      const y=height-50+basketBounce;ctx.save();ctx.translate(basketX,y);ctx.textAlign='center';ctx.textBaseline='middle';
+      // Bunny peeks out above a rounded, hand-drawn basket.
+      ctx.font='31px system-ui';ctx.fillText('🐰',0,-27);
+      ctx.fillStyle='#c38851';ctx.beginPath();ctx.moveTo(-37,-12);ctx.quadraticCurveTo(-34,22,0,23);ctx.quadraticCurveTo(34,22,37,-12);ctx.quadraticCurveTo(0,-3,-37,-12);ctx.fill();
+      ctx.strokeStyle='#97613d';ctx.lineWidth=2.5;for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(i*13,-7);ctx.lineTo(i*10,16);ctx.stroke()}
+      ctx.fillStyle='#f0bd78';ctx.beginPath();ctx.ellipse(0,-11,39,10,0,Math.PI,Math.PI*2);ctx.fill();ctx.strokeStyle='#a16a3e';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,-11,39,10,0,Math.PI,Math.PI*2);ctx.stroke();ctx.restore();
+    }
+    function drawFruit(f){ctx.save();ctx.font=`${f.size}px system-ui,"Apple Color Emoji","Segoe UI Emoji"`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#38586624';ctx.shadowBlur=5;ctx.fillText(f.symbol,f.x,f.y);ctx.restore()}
+    function makeFruit(){if(objects.length>=3)return;objects.push({x:randomBetween(32,width-32),y:-28,size:randomBetween(31,39),symbol:fruitTypes[Math.floor(Math.random()*fruitTypes.length)],speed:randomBetween(47,62)+level*4.5,phase:randomBetween(0,Math.PI*2),caught:false,missed:false})}
+    function sparkle(x,y){for(let i=0;i<9;i++)sparkles.push({x,y,vx:randomBetween(-95,95),vy:randomBetween(-145,-25),left:.58,color:['#ff6c87','#ffd36c','#8ed89a','#b09ae8'][i%4]})}
+    function draw(time){ctx.clearRect(0,0,width,height);drawLandscape(time);for(const fruit of objects)drawFruit(fruit);for(const bit of sparkles){ctx.globalAlpha=Math.max(0,bit.left/.58);ctx.fillStyle=bit.color;ctx.beginPath();ctx.arc(bit.x,bit.y,3.5,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;drawBasket()}
+    function loop(now){requestAnimationFrame(loop);const dt=Math.min(.04,Math.max(0,(now-lastTime)/1000));lastTime=now;
+      if(status==='playing'){
+        worldTime+=dt;spawnWait+=dt;const interval=Math.max(2,2.8-level*.06);if(spawnWait>=interval){spawnWait-=interval;makeFruit()}
+        basketX+=(basketAim-basketX)*Math.min(1,dt*11);basketBounce*=Math.exp(-dt*9);
+        for(const fruit of objects){fruit.y+=fruit.speed*dt;fruit.x+=Math.sin(now*.0015+fruit.phase)*9*dt;if(Math.abs(fruit.x-basketX)<43&&fruit.y>height-103&&fruit.y<height-48){fruit.caught=true;caught++;basketBounce=-Math.min(8,2+level*.35);sparkle(fruit.x,fruit.y);syncHud();if(caught>=level*10){finishLevel();break}}if(!fruit.caught&&!fruit.missed&&fruit.y>height-20){fruit.missed=true;loseGame();break}}
+        objects=objects.filter(fruit=>!fruit.caught&&fruit.y<height+40);
+      }
+      for(const bit of sparkles){bit.x+=bit.vx*dt;bit.y+=bit.vy*dt;bit.vy+=240*dt;bit.left-=dt}sparkles=sparkles.filter(bit=>bit.left>0);
+      draw(now);
+    }
+    function setBasketFromPointer(event){const rect=canvas.getBoundingClientRect();basketAim=Math.min(width-43,Math.max(43,event.clientX-rect.left))}
+    canvas.addEventListener('pointerdown',event=>{canvas.setPointerCapture(event.pointerId);setBasketFromPointer(event)});
+    canvas.addEventListener('pointermove',event=>{if(event.buttons||event.pointerType==='touch')setBasketFromPointer(event)});
+    window.addEventListener('resize',resize);
+    pauseButton.addEventListener('click',pauseGame);restartButton.addEventListener('click',restartGame);menuButton.addEventListener('click',returnToMenu);
+    musicButton.addEventListener('click',()=>{musicOn=!musicOn;syncHud();if(musicOn)tuneStart();else tuneStop()});
+    resize();syncHud();returnToMenu();requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>
